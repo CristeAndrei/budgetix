@@ -27,6 +27,7 @@ export function useFlux(fluxId = null, type = null) {
       } else {
         unsubscribeFlux = database.fluxes.doc(fluxId).onSnapshot((snapshot) => {
           const doc = database.formatDoc(snapshot);
+          doc.createdAt = doc.createdAt.toMillis();
           dispatch(UpdateFlux({ doc }));
         });
       }
@@ -37,8 +38,10 @@ export function useFlux(fluxId = null, type = null) {
         .orderBy("createdAt")
         .onSnapshot((snapshot) => {
           const docs = snapshot.docs.map(database.formatDoc);
-
-          dispatch(UpdateChildFluxes({ docs }));
+          const formattedDocs= docs.map((item)=> {
+            return {...item, createdAt: item.createdAt.toMillis()}
+          })
+          dispatch(UpdateChildFluxes({ formattedDocs }));
         });
       const unsubscribeLines = database.lines
         .where("fluxId", "==", fluxId)
@@ -46,7 +49,10 @@ export function useFlux(fluxId = null, type = null) {
         .orderBy("createdAt")
         .onSnapshot((snapshot) => {
           const docs = snapshot.docs.map(database.formatDoc);
-          dispatch(UpdateChildLines({ docs }));
+          const formattedDocs= docs.map((item)=> {
+            return {...item, createdAt: item.createdAt.toMillis()}
+          })
+          dispatch(UpdateChildLines({ formattedDocs }));
         });
 
       return () => {
