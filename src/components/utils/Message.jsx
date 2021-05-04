@@ -3,7 +3,7 @@ import { Snackbar } from "@material-ui/core";
 
 import { Alert } from "@material-ui/lab";
 
-export default function CoSnackbar({
+export default function Message({
   text,
   type,
   vertical,

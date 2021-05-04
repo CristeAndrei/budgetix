@@ -6,13 +6,14 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  IconButton,
   TextField,
-  SvgIcon,
+  Tooltip,
 } from "@material-ui/core";
 import PlaylistAddSharpIcon from "@material-ui/icons/PlaylistAddSharp";
 import ArrowBackIcon from "@material-ui/icons/ArrowBack";
-import { database } from "../../firebase";
-import { ROOT_FLUX } from "../../hooks/useFlux";
+import { database } from "../../../firebase";
+import { ROOT_FLUX } from "../../../hooks/useFlux";
 import { useSelector } from "react-redux";
 
 export default function AddFluxButton({ type }) {
@@ -40,6 +41,7 @@ export default function AddFluxButton({ type }) {
       path.push({ name: flux.name, id: flux.id });
     }
 
+    //create flux in firebase
     try {
       await database.fluxes.add({
         name: name,
@@ -49,19 +51,20 @@ export default function AddFluxButton({ type }) {
         parentId: flux.id,
         path: path,
         userId: [uid],
+        subscribedBudgets: flux.id !== null ? flux.subscribedBudgets : [],
         createdAt: new Date(),
       });
     } catch (error) {
       console.log(error);
     }
-    //create flux in firebase
   }
 
   return (
     <>
-      <Button onClick={openDialog}>
-        <SvgIcon component={PlaylistAddSharpIcon} />
-      </Button>
+      <Tooltip placement="left" title="Add Flux">
+        <IconButton onClick={openDialog} children={<PlaylistAddSharpIcon />} />
+      </Tooltip>
+
       <Dialog
         open={open}
         onClose={closeDialog}

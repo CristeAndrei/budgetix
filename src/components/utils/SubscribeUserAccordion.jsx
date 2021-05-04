@@ -11,17 +11,20 @@ import {
   ListItemSecondaryAction,
   ListItemText,
   TextField,
-  Typography,
 } from "@material-ui/core";
 import PersonOutlineIcon from "@material-ui/icons/PersonOutline";
 import RemoveCircleIcon from "@material-ui/icons/RemoveCircle";
 import { useSelector } from "react-redux";
 import { database } from "../../firebase";
-import CoSnackbar from "./CoSnackbar";
-import CoSpinner from "./CoSpinner";
+import Message from "./Message";
+import LoadingScreen from "./LoadingScreen";
 import AddIcon from "@material-ui/icons/Add";
 
-export default function SubscribeUserAccordion({ userList, setUserList }) {
+export default function SubscribeUserAccordion({
+  userList,
+  setUserList,
+  text,
+}) {
   const [subscriber, setSubscriber] = useState("");
   const { userName } = useSelector(({ user }) => user.data);
   const [loading, setLoading] = useState(false);
@@ -67,21 +70,21 @@ export default function SubscribeUserAccordion({ userList, setUserList }) {
   return (
     <>
       <Accordion style={{ marginTop: "15px" }}>
-        <AccordionSummary>Subscribe users to budget</AccordionSummary>
+        <AccordionSummary>{text}</AccordionSummary>
         <AccordionDetails>
           <List>
             {userList.map(
-              (item) =>
+              (item, index) =>
                 item !== userName && (
-                  <ListItem key={item.id}>
+                  <ListItem key={index}>
                     <ListItemIcon>
                       <PersonOutlineIcon />
                     </ListItemIcon>
-                    <ListItemText>
-                      <Typography noWrap={true} style={{ maxWidth: "115px" }}>
-                        {item}
-                      </Typography>
-                    </ListItemText>
+                    <ListItemText
+                      primaryTypographyProps={{ noWrap: true }}
+                      primary={item}
+                      style={{ maxWidth: "115px" }}
+                    />
                     <ListItemSecondaryAction>
                       <IconButton
                         edge="end"
@@ -113,7 +116,7 @@ export default function SubscribeUserAccordion({ userList, setUserList }) {
         </AccordionActions>
       </Accordion>
       {error !== "" && (
-        <CoSnackbar
+        <Message
           text={error}
           type="error"
           vertical="top"
@@ -121,7 +124,7 @@ export default function SubscribeUserAccordion({ userList, setUserList }) {
           onCloseCo={() => setError("")}
         />
       )}
-      <CoSpinner open={loading} />
+      <LoadingScreen open={loading} />
     </>
   );
 }

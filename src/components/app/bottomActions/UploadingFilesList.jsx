@@ -8,10 +8,10 @@ import {
 } from "@material-ui/core";
 import CloseIcon from "@material-ui/icons/Close";
 import React from "react";
-import { removeUploadingFiles } from "../../redux/fluxesSlice";
+import { removeUploadingFiles } from "../../../redux/fluxesSlice";
 import { useDispatch, useSelector } from "react-redux";
 
-export default function ListUploadingFiles() {
+export default function UploadingFilesList() {
   const { uploadingFiles } = useSelector(({ fluxes }) => fluxes);
   const dispatch = useDispatch();
 
@@ -32,7 +32,6 @@ export default function ListUploadingFiles() {
               mt={1}
               mb={1}
               ml={1}
-
             >
               <Box width="100%">
                 <Typography noWrap>{file.name}</Typography>

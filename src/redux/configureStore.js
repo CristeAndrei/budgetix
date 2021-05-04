@@ -1,18 +1,18 @@
-import { configureStore } from '@reduxjs/toolkit';
-import fluxesSlice from './fluxesSlice';
-import userSlice from './userSlice';
-import notificationSlice from './notificationSlice';
-import budgetSlice from './budgetSlice';
+import { configureStore } from "@reduxjs/toolkit";
+import fluxesSlice from "./fluxesSlice";
+import userSlice from "./userSlice";
+import notificationSlice from "./notificationSlice";
+import budgetsSlice from "./budgetsSlice";
 
 const reducer = {
-	user: userSlice,
-	fluxes: fluxesSlice,
-	notifications: notificationSlice,
-	budget: budgetSlice,
+  user: userSlice,
+  fluxes: fluxesSlice,
+  notifications: notificationSlice,
+  budgets: budgetsSlice,
 };
 
 const store = configureStore({
-	reducer,
+  reducer,
 });
 
 export default store;

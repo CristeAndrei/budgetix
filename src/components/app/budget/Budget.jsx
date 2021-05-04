@@ -1,56 +1,72 @@
-import React, { useState } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import { Divider, Fab, Typography } from '@material-ui/core';
-import AddIcon from '@material-ui/icons/Add';
-import BudgetAdd from './AddBudget';
-import ListBudget from './ListBudget';
+import React, { useState } from "react";
+import { makeStyles } from "@material-ui/core/styles";
+import { Divider, Fab, IconButton, Typography } from "@material-ui/core";
+import AddIcon from "@material-ui/icons/Add";
+import BudgetList from "./BudgetList";
+import BudgetDialog from "./BudgetDialog";
+import { useBudget } from "../../../hooks/useBudget";
+import { Link, useParams } from "react-router-dom";
+import BudgetInfo from "./BudgetInfo";
+import { GrMoney } from "react-icons/gr";
+import ArrowBackIcon from "@material-ui/icons/ArrowBack";
 
 const useStyles = makeStyles((theme) => ({
-	customMarginTop: {
-		marginTop: '59px',
-	},
-	customMarginBottom: {
-		marginBottom: '70px',
-	},
-	absoluteFluxNav: {
-		position: 'sticky',
-		top: '55px',
-		width: '100%',
-		zIndex: theme.zIndex.drawer + 1,
-	},
-	addNotificationButton: {
-		position: 'fixed',
-		bottom: '10px',
-		right: '10px',
-	},
+  budgetContainer: { ...theme.dashboardMarginTop },
+  addBudgetButton: {
+    position: "fixed",
+    bottom: "0.625rem",
+    right: "0.625rem",
+  },
 }));
 
 export default function Budget() {
-	const classes = useStyles();
+  const classes = useStyles();
+  const [open, setOpen] = useState("");
+  const { budgetId = null } = useParams();
+  const { budgetList, selectedBudget } = useBudget(budgetId);
 
-	const [open, setOpen] = useState(false);
+  function openCreateBudget() {
+    setOpen("add");
+  }
 
-	function openCreateBudget() {
-		setOpen(true);
-	}
+  function openUpdateBudget() {
+    setOpen("update");
+  }
 
-	function closeCreateBudget() {
-		setOpen(false);
-	}
+  function closeCreateBudget() {
+    setOpen("");
+  }
 
-	return Notification.permission === 'granted' ? (
-		<>
-			<div className={classes.customMarginTop}>
-				<Typography>Budgets</Typography>
-				<Divider />
-				<ListBudget />
-			</div>
-			<BudgetAdd open={open} onClose={closeCreateBudget} />
-			<Fab className={classes.addNotificationButton} onClick={openCreateBudget}>
-				<AddIcon />
-			</Fab>
-		</>
-	) : (
-		<></>
-	);
+  return Notification.permission === "granted" ? (
+    <>
+      <div className={classes.budgetContainer}>
+        <div>
+          <IconButton
+            children={budgetId === null ? <GrMoney /> : <ArrowBackIcon />}
+            component={Link}
+            to="/budget"
+          />
+          <Typography display={"inline"}>
+            {budgetId === null ? "Budgets" : selectedBudget.name}
+          </Typography>
+        </div>
+
+        <Divider />
+        {budgetId === null ? (
+          <BudgetList budgetList={budgetList} />
+        ) : (
+          <BudgetInfo selectedBudget={selectedBudget} />
+        )}
+      </div>
+      <BudgetDialog open={open} onClose={closeCreateBudget} />
+      <Fab
+        className={classes.addBudgetButton}
+        onClick={budgetId === null ? openCreateBudget : openUpdateBudget}
+      >
+        <AddIcon />
+      </Fab>
+    </>
+  ) : (
+    <></>
+  );
 }

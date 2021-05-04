@@ -3,17 +3,18 @@ import React, { useState } from "react";
 import { v4 as uuidV4 } from "uuid";
 import {
   Button,
-  SvgIcon,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
+  IconButton,
   TextField,
+  Tooltip,
 } from "@material-ui/core";
 import AttachmentIcon from "@material-ui/icons/Attachment";
 
-import { database, storage } from "../../firebase";
+import { database, storage } from "../../../firebase";
 import { useDispatch, useSelector } from "react-redux";
 import ArrowBackIcon from "@material-ui/icons/ArrowBack";
 import {
@@ -21,8 +22,8 @@ import {
   removeUploadingFiles,
   setErrorUploadingFiles,
   updateProgressUploadingFiles,
-} from "../../redux/fluxesSlice";
-import updateAllBalance from "../helpers/updateAllBalance";
+} from "../../../redux/fluxesSlice";
+import updateAllBalance from "../../../helpers/updateAllBalance";
 
 export default function AddFileLineButton() {
   const [open, setOpen] = useState(false);
@@ -117,9 +118,10 @@ export default function AddFileLineButton() {
 
   return (
     <>
-      <Button onClick={openDialog}>
-        <SvgIcon component={AttachmentIcon} />
-      </Button>
+      <Tooltip placement="left" title="Add File">
+        <IconButton onClick={openDialog} children={<AttachmentIcon />} />
+      </Tooltip>
+
       <Dialog
         open={open}
         onClose={closeDialog}

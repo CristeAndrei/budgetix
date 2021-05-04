@@ -1,21 +1,22 @@
 import React, { useState } from "react";
 import {
-  Button,
-  Typography,
   Box,
+  Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  TextField,
   SvgIcon,
+  TextField,
+  Typography,
 } from "@material-ui/core";
 import ReceiptIcon from "@material-ui/icons/Receipt";
 import ArrowBackIcon from "@material-ui/icons/ArrowBack";
 import DescriptionIcon from "@material-ui/icons/Description";
 import { database, firestore, storage } from "../../firebase";
 import { useSelector } from "react-redux";
-import updateAllBalance from "../helpers/updateAllBalance";
+import updateAllBalance from "../../helpers/updateAllBalance";
+import updateAllBudgetsBalance from "../../helpers/updateAllBudgetsBalance";
 
 export default function Line({ line }) {
   const [open, setOpen] = useState(false);
@@ -61,6 +62,10 @@ export default function Line({ line }) {
 
       //Update local and global balance
       await updateAllBalance(flux, decimalValue);
+
+      //Update budget balance
+      if (flux.subscribedBudgets.length)
+        await updateAllBudgetsBalance(flux, decimalValue);
     }
   }
 
@@ -94,6 +99,10 @@ export default function Line({ line }) {
         totalBalance: database.increment(balanceDiff),
       });
     }
+
+    //update budget balance
+    if (flux.subscribedBudgets.length)
+      await updateAllBudgetsBalance(flux, -value);
 
     await batch.commit();
 

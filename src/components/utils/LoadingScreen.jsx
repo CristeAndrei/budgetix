@@ -8,7 +8,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function CoSpinner({ open }) {
+export default function LoadingScreen({ open }) {
   const classes = useStyles();
 
   return (

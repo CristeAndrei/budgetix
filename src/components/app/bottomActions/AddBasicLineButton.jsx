@@ -1,20 +1,22 @@
 import React, { useState } from "react";
 import {
   Button,
-  SvgIcon,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
+  IconButton,
   TextField,
+  Tooltip,
 } from "@material-ui/core";
-import EditIcon from "@material-ui/icons/Edit";
 
-import { database } from "../../firebase";
+import { database } from "../../../firebase";
 import { useSelector } from "react-redux";
-import updateAllBalance from "../helpers/updateAllBalance";
+import updateAllBalance from "../../../helpers/updateAllBalance";
 import ArrowBackIcon from "@material-ui/icons/ArrowBack";
+import CreateIcon from "@material-ui/icons/Create";
+import updateAllBudgetsBalance from "../../../helpers/updateAllBudgetsBalance";
 
 export default function AddBasicLineButton() {
   const [open, setOpen] = useState(false);
@@ -43,26 +45,35 @@ export default function AddBasicLineButton() {
 
     if (flux.id == null) return;
 
-    const decimalValue = parseFloat(value);
+    try {
+      const decimalValue = parseFloat(value);
 
-    //create line in firebase
-    await database.lines.add({
-      name: name,
-      value: decimalValue,
-      createdAt: new Date(),
-      fluxId: flux.id,
-      userId: flux.type === "group" ? flux.userId : [uid],
-    });
+      //create line in firebase
+      await database.lines.add({
+        name: name,
+        value: decimalValue,
+        createdAt: new Date(),
+        fluxId: flux.id,
+        userId: flux.type === "group" ? flux.userId : [uid],
+      });
 
-    //update local and global balance
-    await updateAllBalance(flux, decimalValue);
+      //update local and global balance
+      await updateAllBalance(flux, decimalValue);
+
+      //update all budgets
+      if (flux.subscribedBudgets.length)
+        await updateAllBudgetsBalance(flux, decimalValue);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   return (
     <>
-      <Button onClick={openDialog}>
-        <SvgIcon component={EditIcon} />
-      </Button>
+      <Tooltip placement="left" title="Add Line">
+        <IconButton onClick={openDialog} children={<CreateIcon />} />
+      </Tooltip>
+
       <Dialog
         open={open}
         onClose={closeDialog}

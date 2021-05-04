@@ -7,15 +7,17 @@ import HourglassEmptyIcon from "@material-ui/icons/HourglassEmpty";
 import AddIcon from "@material-ui/icons/Add";
 import InfoIcon from "@material-ui/icons/Info";
 
-import { ClickAwayListener, Badge, Divider, Popover } from "@material-ui/core";
+import { Badge, ClickAwayListener, Divider, Popover } from "@material-ui/core";
 import AddFluxButton from "./AddFluxButton";
 import FluxInfo from "./FluxInfo";
 import AddFileLineButton from "./AddFileLineButton";
 import AddBasicLineButton from "./AddBasicLineButton";
 import { useSelector } from "react-redux";
-import ListUploadingFiles from "./ListUploadingFiles";
+import UploadingFilesList from "./UploadingFilesList";
 import AddUserToFlux from "./AddUserToFlux";
-import ListGroupUsers from "./ListGroupUsers";
+import GroupUsersList from "./GroupUsersList";
+import BudgetSubscriptionsInfo from "./BudgetSubscriptionsInfo";
+import AddBudgetSubscription from "./AddBudgetSubscription";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -121,9 +123,11 @@ export default function BottomActions({ type }) {
             }}
             onClose={handleCloseInfo}
           >
-            <FluxInfo type={type} />
+            <BudgetSubscriptionsInfo />
             <Divider />
-            {type === "group" && fluxId !== null && <ListGroupUsers />}
+            {type === "group" && fluxId !== null && <GroupUsersList />}
+            <Divider />
+            <FluxInfo type={type} />
           </Popover>
 
           <Popover
@@ -149,6 +153,8 @@ export default function BottomActions({ type }) {
                     <Divider />
                   </>
                 )}
+                <AddBudgetSubscription />
+                <Divider />
                 <AddFileLineButton type={type} />
                 <Divider />
                 <AddBasicLineButton type={type} />
@@ -159,7 +165,7 @@ export default function BottomActions({ type }) {
       </ClickAwayListener>
 
       <div hidden={openPending} className={classes.paperPending}>
-        <ListUploadingFiles />
+        <UploadingFilesList />
       </div>
     </>
   );
