@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Accordion,
   AccordionActions,
@@ -10,7 +10,6 @@ import {
   ListItemIcon,
   ListItemSecondaryAction,
   ListItemText,
-  TextField,
 } from "@material-ui/core";
 import PersonOutlineIcon from "@material-ui/icons/PersonOutline";
 import RemoveCircleIcon from "@material-ui/icons/RemoveCircle";
@@ -19,6 +18,8 @@ import { database } from "../../firebase";
 import Message from "./Message";
 import LoadingScreen from "./LoadingScreen";
 import AddIcon from "@material-ui/icons/Add";
+import { TextValidator } from "react-material-ui-form-validator";
+import useValidators from "../../hooks/useValidators";
 
 export default function SubscribeUserAccordion({
   userList,
@@ -29,9 +30,37 @@ export default function SubscribeUserAccordion({
   const { userName } = useSelector(({ user }) => user.data);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [formattedUserList, setFormattedUserList] = useState([]);
+
+  useValidators();
+
+  useEffect(() => {
+    (async () => {
+      const usersRef = await database.users
+        .where(database.documentId, "in", userList)
+        .get();
+      const usersDocs = usersRef.docs;
+      const userData = usersDocs.map((doc) => {
+        return {
+          id: doc.id,
+          username: doc.data().userName,
+        };
+      });
+      setFormattedUserList(userData);
+    })();
+    return () => {
+      setFormattedUserList([]);
+    };
+  }, [userList]);
 
   function removeSubscribedUser(username) {
-    setUserList((prevState) => prevState.filter((item) => item !== username));
+    const newFormattedUserList = formattedUserList.filter(
+      (item) => item.username !== username
+    );
+
+    setFormattedUserList(newFormattedUserList);
+
+    setUserList(newFormattedUserList.map((user) => user.id));
   }
 
   async function subscribeUser() {
@@ -40,7 +69,9 @@ export default function SubscribeUserAccordion({
       return;
     }
 
-    const existInList = userList.filter((item) => item === subscriber);
+    const existInList = formattedUserList.filter(
+      (item) => item.username === subscriber
+    );
 
     if (existInList.length) {
       setError("User already added");
@@ -53,12 +84,22 @@ export default function SubscribeUserAccordion({
       const checkUsername = await database.users
         .where("userName", "==", subscriber)
         .get();
+
       if (checkUsername.empty) {
         setError("Username doesn't exist");
         setLoading(false);
         return;
       }
-      setUserList((prevUserList) => [...prevUserList, subscriber]);
+
+      const newFormattedUserList = [
+        ...formattedUserList,
+        { id: checkUsername.docs[0].id, username: subscriber },
+      ];
+
+      setFormattedUserList(newFormattedUserList);
+
+      setUserList(newFormattedUserList.map((user) => user.id));
+
       setSubscriber("");
     } catch (error) {
       setError(error);
@@ -73,23 +114,23 @@ export default function SubscribeUserAccordion({
         <AccordionSummary>{text}</AccordionSummary>
         <AccordionDetails>
           <List>
-            {userList.map(
+            {formattedUserList.map(
               (item, index) =>
-                item !== userName && (
+                item.username !== userName && (
                   <ListItem key={index}>
                     <ListItemIcon>
                       <PersonOutlineIcon />
                     </ListItemIcon>
                     <ListItemText
                       primaryTypographyProps={{ noWrap: true }}
-                      primary={item}
+                      primary={item.username}
                       style={{ maxWidth: "115px" }}
                     />
                     <ListItemSecondaryAction>
                       <IconButton
                         edge="end"
                         aria-label="delete"
-                        onClick={() => removeSubscribedUser(item)}
+                        onClick={() => removeSubscribedUser(item.username)}
                       >
                         <RemoveCircleIcon />
                       </IconButton>
@@ -100,13 +141,15 @@ export default function SubscribeUserAccordion({
           </List>
         </AccordionDetails>
         <AccordionActions>
-          <TextField
+          <TextValidator
             style={{ marginBottom: "27px" }}
             margin="dense"
             id="username"
             label="Username"
             type="text"
             fullWidth
+            validators={["noSpace"]}
+            errorMessages={["White spaces are not allowed in username"]}
             value={subscriber}
             onChange={(e) => setSubscriber(e.target.value)}
           />

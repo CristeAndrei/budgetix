@@ -1,39 +1,44 @@
 import { database, firestore } from "../firebase";
+import updateBudgetTasks from "./updateBudgetTasks";
 
 export default async function updateAllBudgetsBalance(flux, decimalValue) {
-  //update  balance for all budgets
+  try {
+    const batch = firestore.batch();
 
-  const batch = firestore.batch();
+    //add remove or update budget notification
 
-  for (const item of flux.subscribedBudgets) {
-    const docRef = database.budgets.doc(item.id);
+    //update balance for all subscribed budgets
+    for (const item of flux.subscribedBudgets) {
+      const subscribedBudgetsRef = database.budgets.doc(item);
 
-    const newValue = flux.balance + decimalValue;
+      await updateBudgetTasks(subscribedBudgetsRef, decimalValue);
 
-    batch.update(docRef, {
-      totalBalance: database.increment(decimalValue),
-    });
+      const newValue = flux.balance + decimalValue;
 
-    batch.update(docRef, {
-      balance: database.removeItemsFromArray({
-        id: flux.id,
-        name: flux.name,
-        value: flux.balance,
-        path: flux.path,
-        parentId: flux.parentId,
-      }),
-    });
+      batch.update(subscribedBudgetsRef, {
+        totalBalance: database.increment(decimalValue),
+      });
 
-    batch.update(docRef, {
-      balance: database.addItemsToArray({
-        id: flux.id,
-        name: flux.name,
-        value: newValue,
-        path: flux.path,
-        parentId: flux.parentId,
-      }),
-    });
+      batch.update(subscribedBudgetsRef, {
+        subscribedFluxes: database.removeItemsFromArray({
+          id: flux.id,
+          name: flux.name,
+          value: flux.balance,
+          type: flux.type,
+        }),
+      });
+
+      batch.update(subscribedBudgetsRef, {
+        subscribedFluxes: database.addItemsToArray({
+          id: flux.id,
+          name: flux.name,
+          value: newValue,
+          type: flux.type,
+        }),
+      });
+    }
+
+    await batch.commit();
+  } finally {
   }
-
-  await batch.commit();
 }

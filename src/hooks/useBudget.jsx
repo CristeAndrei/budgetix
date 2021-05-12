@@ -1,47 +1,74 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { database } from "../firebase";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  updateBudget,
-  updateAllBudgets,
   selectBudget,
+  updateAllBudgets,
+  updateBudget,
 } from "../redux/budgetsSlice";
 
 export function useBudget(budgetId = null) {
-  const { userName } = useSelector(({ user }) => user.data);
+  const { uid } = useSelector(({ user }) => user.data);
   const { budgetList, selectedBudget } = useSelector(({ budgets }) => budgets);
+  const [errorBudget, setErrorBudget] = useState("");
+  const [loadingBudget, setLoadingBudget] = useState(false);
 
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (userName) {
-      dispatch(selectBudget({ budgetId }));
+    if (uid) {
+      setLoadingBudget(true);
+      let unsubscribeAllBudgets = () => {};
+      let unsubscribeBudget = () => {};
+      try {
+        dispatch(selectBudget({ budgetId }));
 
-      let unsubscribeBudget =
-        budgetId === null
-          ? () => {}
-          : database.budgets.doc(budgetId).onSnapshot((snapshot) => {
-              const formattedDoc = database.formatDoc(snapshot);
-              formattedDoc.createdAt = formattedDoc.createdAt.toMillis();
-              dispatch(updateBudget({ formattedDoc }));
+        unsubscribeBudget =
+          budgetId === null
+            ? () => {}
+            : database.budgets.doc(budgetId).onSnapshot((snapshot) => {
+                const formattedDoc = database.formatDoc(snapshot);
+                const canAddUsers = !formattedDoc.subscribedFluxes.some(
+                  (flux) => flux.type === "flux"
+                );
+                formattedDoc.createdAt = formattedDoc.createdAt.toMillis();
+                formattedDoc.budgetType = canAddUsers;
+                dispatch(updateBudget({ formattedDoc }));
+              });
+
+        unsubscribeAllBudgets = database.budgets
+          .where("userList", "array-contains", uid)
+          .onSnapshot((snapshot) => {
+            const docs = snapshot.docs.map(database.formatDoc);
+            const formattedDocs = docs.map((doc) => {
+              return {
+                ...doc,
+                createdAt: doc.createdAt.toMillis(),
+                canAddUsers: !doc.subscribedFluxes.some(
+                  (flux) => flux.type === "flux"
+                ),
+              };
             });
-
-      const unsubscribeAllBudgets = database.budgets
-        .where("userList", "array-contains", userName)
-        .onSnapshot((snapshot) => {
-          const docs = snapshot.docs.map(database.formatDoc);
-          const formattedDocs = docs.map((item) => {
-            return { ...item, createdAt: item.createdAt.toMillis() };
+            dispatch(updateAllBudgets({ formattedDocs }));
           });
-          dispatch(updateAllBudgets({ formattedDocs }));
-        });
-
-      return () => {
-        unsubscribeBudget();
-        unsubscribeAllBudgets();
-      };
+      } catch (err) {
+        setErrorBudget("Something went wrong while getting the budgets");
+        console.log(err);
+      } finally {
+        setLoadingBudget(false);
+        return () => {
+          unsubscribeBudget();
+          unsubscribeAllBudgets();
+        };
+      }
     }
-  }, [userName, dispatch, budgetId]);
+  }, [uid, dispatch, budgetId]);
 
-  return { budgetList, selectedBudget };
+  return {
+    errorBudget,
+    setErrorBudget,
+    loadingBudget,
+    budgetList,
+    selectedBudget,
+  };
 }

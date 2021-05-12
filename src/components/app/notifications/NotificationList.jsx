@@ -16,13 +16,18 @@ import Message from "../../utils/Message";
 import LoadingScreen from "../../utils/LoadingScreen";
 
 export default function NotificationList({ setOpen, setNotification }) {
-  const { notificationList } = useNotifications();
+  const {
+    notificationList,
+    setErrorNotifications,
+    errorNotifications,
+    loadingNotifications,
+  } = useNotifications();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   function openUpdateNotification(item) {
-    setOpen("update");
     setNotification(item);
+    setOpen("update");
   }
 
   async function handleToggleNotification(item) {
@@ -35,8 +40,9 @@ export default function NotificationList({ setOpen, setNotification }) {
 
       const notificationRef = database.tasks.doc(item.id);
       await notificationRef.update({ status: newStatus });
-    } catch (error) {
-      setError(error);
+    } catch (err) {
+      console.log(err);
+      setError("Failed to update the notification");
     }
 
     setLoading(false);
@@ -79,16 +85,21 @@ export default function NotificationList({ setOpen, setNotification }) {
           </ListItem>
         ))}
       </List>
-      {error !== "" && (
+      {(error || errorNotifications) !== "" && (
         <Message
-          text={error}
+          text={error || errorNotifications}
           type="error"
           vertical="top"
           horizontal="center"
-          onCloseCo={() => setError("")}
+          onCloseCo={() => {
+            setErrorNotifications("");
+            setError("");
+          }}
         />
       )}
-      <LoadingScreen open={loading} />
+      {(loading || loadingNotifications) && (
+        <LoadingScreen open={loading || loadingNotifications} />
+      )}
     </>
   );
 }

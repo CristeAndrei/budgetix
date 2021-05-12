@@ -1,30 +1,47 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { database } from "../firebase";
 
 import { useDispatch, useSelector } from "react-redux";
 import { updateNotifications } from "../redux/notificationSlice";
 
 export function useNotifications() {
-  const { userName } = useSelector(({ user }) => user.data);
+  const { uid } = useSelector(({ user }) => user.data);
   const dispatch = useDispatch();
   const { notificationList } = useSelector(
     ({ notifications }) => notifications
   );
-
+  const [errorNotifications, setErrorNotifications] = useState("");
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
   useEffect(() => {
-    if (userName) {
-      return database.tasks
-        .where("options.userList", "array-contains", userName)
-        .where("type", "==", "invoiceNotification")
-        .onSnapshot((snapshot) => {
-          const docs = snapshot.docs.map(database.formatDoc);
-          const formattedDocs = docs.map((item) => {
-            return { ...item, performAt: item.performAt.toMillis() };
+    if (uid) {
+      setLoadingNotifications(true);
+      let unsubscribeNotifications = () => {};
+      try {
+        unsubscribeNotifications = database.tasks
+          .where("options.userList", "array-contains", uid)
+          .onSnapshot((snapshot) => {
+            const docs = snapshot.docs.map(database.formatDoc);
+            const formattedDocs = docs.map((doc) => {
+              return { ...doc, performAt: doc.performAt.toMillis() };
+            });
+            dispatch(updateNotifications({ formattedDocs }));
           });
-          dispatch(updateNotifications({ formattedDocs }));
-        });
+      } catch (err) {
+        setErrorNotifications(
+          "Something went wrong while getting the notifications"
+        );
+        console.log(err);
+      } finally {
+        setLoadingNotifications(false);
+        return unsubscribeNotifications;
+      }
     }
-  }, [userName, dispatch]);
+  }, [uid, dispatch]);
 
-  return { notificationList };
+  return {
+    notificationList,
+    errorNotifications,
+    loadingNotifications,
+    setErrorNotifications,
+  };
 }

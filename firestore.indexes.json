@@ -1,24 +1,6 @@
 {
   "indexes": [
     {
-      "collectionGroup": "Budgets",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "userList",
-          "arrayConfig": "CONTAINS"
-        },
-        {
-          "fieldPath": "name",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
       "collectionGroup": "fluxes",
       "queryScope": "COLLECTION",
       "fields": [
@@ -73,15 +55,15 @@
       ]
     },
     {
-      "collectionGroup": "invoices",
+      "collectionGroup": "lines",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "status",
+          "fieldPath": "fluxId",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "performAt",
+          "fieldPath": "createdAt",
           "order": "ASCENDING"
         }
       ]

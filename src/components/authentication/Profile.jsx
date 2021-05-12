@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from "react";
 import {
+  Button,
   Card,
   CardContent,
-  Button,
-  Typography,
-  Divider,
   Dialog,
   DialogActions,
-  DialogTitle,
   DialogContent,
+  DialogTitle,
+  Divider,
   TextField,
+  Typography,
 } from "@material-ui/core";
 import CenteredContainer from "../utils/CenteredContainer";
 import { useDispatch, useSelector } from "react-redux";
@@ -71,7 +71,6 @@ export default function Profile() {
   async function handleSubmit(e) {
     e.preventDefault();
     closeDialog();
-
     switch (dialog) {
       case "username":
         try {

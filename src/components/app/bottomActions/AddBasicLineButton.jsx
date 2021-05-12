@@ -17,6 +17,9 @@ import updateAllBalance from "../../../helpers/updateAllBalance";
 import ArrowBackIcon from "@material-ui/icons/ArrowBack";
 import CreateIcon from "@material-ui/icons/Create";
 import updateAllBudgetsBalance from "../../../helpers/updateAllBudgetsBalance";
+import LoadingScreen from "../../utils/LoadingScreen";
+import Message from "../../utils/Message";
+import { TextValidator, ValidatorForm } from "react-material-ui-form-validator";
 
 export default function AddBasicLineButton() {
   const [open, setOpen] = useState(false);
@@ -24,6 +27,8 @@ export default function AddBasicLineButton() {
   const [value, setValue] = useState("");
   const { uid } = useSelector(({ user }) => user.data);
   const { flux } = useSelector(({ fluxes }) => fluxes);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   function openDialog() {
     setOpen(true);
@@ -32,14 +37,15 @@ export default function AddBasicLineButton() {
   }
 
   function closeDialog() {
-    setOpen(false);
     setName("");
     setValue("");
+    setOpen(false);
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
     closeDialog();
+    setLoading(true);
 
     if (flux == null || name == null) return;
 
@@ -48,9 +54,11 @@ export default function AddBasicLineButton() {
     try {
       const decimalValue = parseFloat(value);
 
+      const nameTrim = name.trim();
+
       //create line in firebase
       await database.lines.add({
-        name: name,
+        name: nameTrim,
         value: decimalValue,
         createdAt: new Date(),
         fluxId: flux.id,
@@ -63,9 +71,11 @@ export default function AddBasicLineButton() {
       //update all budgets
       if (flux.subscribedBudgets.length)
         await updateAllBudgetsBalance(flux, decimalValue);
-    } catch (error) {
-      console.log(error);
+    } catch (err) {
+      setError("Failed to create new simple line");
+      console.log(err);
     }
+    setLoading(false);
   }
 
   return (
@@ -74,47 +84,65 @@ export default function AddBasicLineButton() {
         <IconButton onClick={openDialog} children={<CreateIcon />} />
       </Tooltip>
 
-      <Dialog
-        open={open}
-        onClose={closeDialog}
-        aria-labelledby="form-dialog-title"
-      >
-        <DialogTitle id="form-dialog-title">
-          <Button onClick={closeDialog} startIcon={<ArrowBackIcon />} />
-          Line
-        </DialogTitle>
-        <form onSubmit={handleSubmit}>
-          <DialogContent>
-            <DialogContentText>Add a new basic record</DialogContentText>
-            <TextField
-              autoFocus
-              required
-              margin="dense"
-              id="name"
-              label="Name"
-              type="text"
-              fullWidth
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <TextField
-              required
-              margin="dense"
-              id="value"
-              label="Value"
-              type="number"
-              fullWidth
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button type="submit" color="primary">
-              Submit
-            </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
+      {open && (
+        <Dialog
+          open={open}
+          onClose={closeDialog}
+          aria-labelledby="form-dialog-title"
+        >
+          <DialogTitle id="form-dialog-title">
+            <Button onClick={closeDialog} startIcon={<ArrowBackIcon />} />
+            Line
+          </DialogTitle>
+          <ValidatorForm onSubmit={handleSubmit}>
+            <DialogContent>
+              <DialogContentText>Add a new basic record</DialogContentText>
+              <TextValidator
+                autoFocus
+                required
+                margin="dense"
+                id="name"
+                label="Name"
+                type="text"
+                validators={["required", "trim"]}
+                errorMessages={[
+                  "This field is required",
+                  "This field is required",
+                ]}
+                fullWidth
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              <TextField
+                required
+                margin="dense"
+                id="value"
+                label="Value"
+                type="number"
+                fullWidth
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button type="submit" color="primary">
+                Submit
+              </Button>
+            </DialogActions>
+          </ValidatorForm>
+        </Dialog>
+      )}
+
+      {error && (
+        <Message
+          type="error"
+          text={error}
+          onCloseCo={() => setError("")}
+          vertical="top"
+          horizontal="center"
+        />
+      )}
+      {loading && <LoadingScreen open={loading} />}
     </>
   );
 }

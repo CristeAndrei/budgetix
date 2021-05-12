@@ -4,6 +4,7 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
+  DialogContentText,
   DialogTitle,
   TextField,
 } from "@material-ui/core";
@@ -19,30 +20,29 @@ import { useSelector } from "react-redux";
 import Message from "../../utils/Message";
 import LoadingScreen from "../../utils/LoadingScreen";
 import { database } from "../../../firebase";
+import { TextValidator, ValidatorForm } from "react-material-ui-form-validator";
 
 export default function NotificationDialog({ open, onClose, notification }) {
-  const [dialog, setDialog] = useState(Boolean(open));
   const [selectedDate, setSelectedDate] = useState(moment());
   const [daysTimeout, setDaysTimeout] = useState("");
   const [text, setText] = useState("");
-  const { userName } = useSelector(({ user }) => user.data);
-  const [userList, setUserList] = useState([userName]);
+  const { userName, uid } = useSelector(({ user }) => user.data);
+  const [userList, setUserList] = useState([uid]);
   const [notificationId, setNotificationId] = useState("");
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setDialog(Boolean(open));
     setSelectedDate(notification?.performAt ?? moment());
     setDaysTimeout(notification?.options?.daysTimeout ?? "");
     setText(notification?.options?.payload?.notification?.body ?? "");
-    setUserList(notification?.options?.userList ?? [userName]);
+    setUserList(notification?.options?.userList ?? [uid]);
     setNotificationId(notification?.id ?? "");
     setStatus(notification?.status ?? "");
-  }, [open, notification, userName]);
+  }, [open, notification, userName, uid]);
+
   function closeDialog() {
-    setDialog(false);
     onClose();
   }
 
@@ -53,17 +53,20 @@ export default function NotificationDialog({ open, onClose, notification }) {
     try {
       const notificationRef = database.tasks.doc(notificationId);
       await notificationRef.delete();
-    } catch (error) {
-      setError(error);
+    } catch (err) {
+      console.log(err);
+      setError("Failed to delete the notification");
     }
 
     setLoading(false);
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function handleSubmitNotification(event) {
+    event.preventDefault();
     closeDialog();
     setLoading(true);
+    setError("");
+
     let daysTimeoutInt = parseInt(daysTimeout);
 
     switch (open) {
@@ -83,13 +86,14 @@ export default function NotificationDialog({ open, onClose, notification }) {
               payload: {
                 notification: {
                   title: "Invoice notification",
-                  body: text,
+                  body: text.trim(),
                 },
               },
             },
           });
-        } catch (error) {
-          setError(error);
+        } catch (err) {
+          console.log(err);
+          setError("Failed to create the notification");
         }
         break;
       case "update":
@@ -109,18 +113,20 @@ export default function NotificationDialog({ open, onClose, notification }) {
               payload: {
                 notification: {
                   title: "Invoice notification",
-                  body: text,
+                  body: text.trim(),
                 },
               },
             },
           });
-        } catch (error) {
-          setError(error);
+        } catch (err) {
+          console.log(err);
+          setError("Failed to update the notification");
         }
 
         break;
 
       default:
+        break;
     }
 
     setLoading(false);
@@ -129,24 +135,29 @@ export default function NotificationDialog({ open, onClose, notification }) {
   return (
     <>
       <Dialog
-        open={dialog}
+        open={Boolean(open)}
         onClose={closeDialog}
         aria-labelledby="form-dialog-title"
       >
         <DialogTitle id="form-dialog-title">
           <Button onClick={closeDialog} startIcon={<ArrowBackIcon />} />
-          Notification
+          Notifications
         </DialogTitle>
-        <form onSubmit={handleSubmit}>
+        <ValidatorForm onSubmit={handleSubmitNotification}>
           <DialogContent>
+            <DialogContentText>
+              {open === "add"
+                ? "Create new notification."
+                : "Edit this notification."}
+            </DialogContentText>
             <MuiPickersUtilsProvider utils={MomentUtils}>
               <KeyboardDatePicker
                 disableToolbar
                 variant="inline"
-                format="MM/dd/yyyy"
+                format="dd/MM/yyyy"
                 margin="normal"
                 id="date-picker-inline"
-                label="Date picker inline"
+                label="Date picker"
                 value={selectedDate}
                 onChange={(date) => setSelectedDate(date)}
                 KeyboardButtonProps={{
@@ -154,13 +165,19 @@ export default function NotificationDialog({ open, onClose, notification }) {
                 }}
               />
             </MuiPickersUtilsProvider>
-            <TextField
+            <TextValidator
               required
               margin="dense"
               id="text"
-              label="Notification Text"
+              label="Notifications Text"
               type="text"
               fullWidth
+              validators={["required", "trim"]}
+              errorMessages={[
+                "This field is required",
+
+                "This field is required",
+              ]}
               value={text}
               onChange={(e) => setText(e.target.value)}
             />
@@ -174,12 +191,14 @@ export default function NotificationDialog({ open, onClose, notification }) {
               value={daysTimeout}
               onChange={(e) => setDaysTimeout(e.target.value)}
             />
-            <SubscribeUserAccordion
-              text={"Add users to notification"}
-              userList={userList}
-              setUserList={setUserList}
-              style={{ marginTop: "15px" }}
-            />
+            {notification?.type !== "budgetNotification" && (
+              <SubscribeUserAccordion
+                text={"Add users to notification"}
+                userList={userList}
+                setUserList={setUserList}
+                style={{ marginTop: "15px" }}
+              />
+            )}
           </DialogContent>
           <DialogActions>
             {open === "update" && (
@@ -191,7 +210,7 @@ export default function NotificationDialog({ open, onClose, notification }) {
               {open === "update" ? "Update" : "Submit"}
             </Button>
           </DialogActions>
-        </form>
+        </ValidatorForm>
       </Dialog>
       {error !== "" && (
         <Message

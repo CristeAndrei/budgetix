@@ -3,15 +3,15 @@ import { Link, useHistory } from "react-router-dom";
 import { makeStyles } from "@material-ui/core/styles";
 import {
   AppBar,
-  Toolbar,
   Button,
-  SwipeableDrawer,
+  Divider,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
-  Divider,
   SvgIcon,
+  SwipeableDrawer,
+  Toolbar,
 } from "@material-ui/core";
 import AccountCircleIcon from "@material-ui/icons/AccountCircle";
 import ExitToAppIcon from "@material-ui/icons/ExitToApp";
@@ -22,6 +22,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { setDeviceFCMToken, signOut } from "../../redux/userSlice";
 import { database } from "../../firebase";
 import AccountBalanceWalletIcon from "@material-ui/icons/AccountBalanceWallet";
+import BarChartIcon from "@material-ui/icons/BarChart";
+import HomeIcon from "@material-ui/icons/Home";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -83,34 +85,32 @@ export default function NavbarComponent() {
       <></>
       <Divider />
       <List>
+        <ListItem button component={Link} to="/">
+          <ListItemIcon children={<HomeIcon />} />
+          <ListItemText primary="Home" />
+        </ListItem>
         <ListItem button component={Link} to="/group">
-          <ListItemIcon>
-            <SvgIcon component={PeopleAltIcon} />
-          </ListItemIcon>
+          <ListItemIcon children={<PeopleAltIcon />} />
           <ListItemText primary="Groups" />
         </ListItem>
         <ListItem button component={Link} to="/user">
-          <ListItemIcon>
-            <SvgIcon component={AccountCircleIcon} />
-          </ListItemIcon>
+          <ListItemIcon children={<AccountCircleIcon />} />
           <ListItemText primary="Account" />
         </ListItem>
         <ListItem button component={Link} to="/notifications">
-          <ListItemIcon>
-            <SvgIcon component={NotificationsIcon} />
-          </ListItemIcon>
+          <ListItemIcon children={<NotificationsIcon />} />
           <ListItemText primary="Notifications" />
         </ListItem>
         <ListItem button component={Link} to="/budget">
-          <ListItemIcon>
-            <SvgIcon component={AccountBalanceWalletIcon} />
-          </ListItemIcon>
-          <ListItemText primary="Budget" />
+          <ListItemIcon children={<AccountBalanceWalletIcon />} />
+          <ListItemText primary="Budgets" />
+        </ListItem>
+        <ListItem button component={Link} to="/graphs">
+          <ListItemIcon children={<BarChartIcon />} />
+          <ListItemText primary="Graphs" />
         </ListItem>
         <ListItem button onClick={handleLogout}>
-          <ListItemIcon>
-            <SvgIcon component={ExitToAppIcon} />
-          </ListItemIcon>
+          <ListItemIcon children={<ExitToAppIcon />} />
           <ListItemText primary="Logout" />
         </ListItem>
       </List>
@@ -148,7 +148,7 @@ export default function NavbarComponent() {
               to="/login"
               style={{ color: "white", textDecoration: "none" }}
             >
-              MoneyRoller
+              Budgetix
             </Link>
           </Toolbar>
         </AppBar>

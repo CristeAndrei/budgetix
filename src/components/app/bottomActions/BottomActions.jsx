@@ -18,6 +18,7 @@ import AddUserToFlux from "./AddUserToFlux";
 import GroupUsersList from "./GroupUsersList";
 import BudgetSubscriptionsInfo from "./BudgetSubscriptionsInfo";
 import AddBudgetSubscription from "./AddBudgetSubscription";
+import AddFluxToGraph from "./AddFluxToGraph";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -123,7 +124,7 @@ export default function BottomActions({ type }) {
             }}
             onClose={handleCloseInfo}
           >
-            <BudgetSubscriptionsInfo />
+            {fluxId !== null && <BudgetSubscriptionsInfo />}
             <Divider />
             {type === "group" && fluxId !== null && <GroupUsersList />}
             <Divider />
@@ -153,6 +154,8 @@ export default function BottomActions({ type }) {
                     <Divider />
                   </>
                 )}
+                <AddFluxToGraph />
+                <Divider />
                 <AddBudgetSubscription />
                 <Divider />
                 <AddFileLineButton type={type} />

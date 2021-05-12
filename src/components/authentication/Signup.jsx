@@ -1,12 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  Card,
-  CardContent,
-  TextField,
-  Button,
-  Typography,
-  Box,
-} from "@material-ui/core";
+import { Box, Button, Card, CardContent, Typography } from "@material-ui/core";
 
 import { Link, useHistory } from "react-router-dom";
 
@@ -16,6 +9,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { setSignUpError, signUpEmail } from "../../redux/userSlice";
 import Message from "../utils/Message";
 import LoadingScreen from "../utils/LoadingScreen";
+import { TextValidator, ValidatorForm } from "react-material-ui-form-validator";
+import useValidators from "../../hooks/useValidators";
 
 export default function Signup() {
   const [name, setName] = useState("");
@@ -27,6 +22,8 @@ export default function Signup() {
     ({ user }) => user
   );
   const dispatch = useDispatch();
+
+  useValidators(password, passwordConfirm);
 
   useEffect(() => {
     if (signUpRedirect === true) history.push("/");
@@ -57,7 +54,7 @@ export default function Signup() {
       ) : (
         <CenteredContainer>
           <Card>
-            <form onSubmit={handleSubmit}>
+            <ValidatorForm onSubmit={handleSubmit}>
               <CardContent>
                 <Box mb={4}>
                   <Typography align="center">Create Account</Typography>
@@ -65,7 +62,7 @@ export default function Signup() {
 
                 <></>
 
-                <TextField
+                <TextValidator
                   required
                   autoFocus
                   autoComplete="off"
@@ -73,24 +70,36 @@ export default function Signup() {
                   id="name"
                   label="Username"
                   type="text"
+                  validators={["required", "trim", "noSpace"]}
+                  errorMessages={[
+                    "This field is required",
+                    "This field is required",
+                    "White spaces are not allowed in username",
+                  ]}
                   fullWidth
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
 
-                <TextField
+                <TextValidator
                   required
                   autoComplete="username"
                   margin="dense"
                   id="email"
                   label="Email"
                   type="email"
+                  validators={["required", "trim", "isEmail"]}
+                  errorMessages={[
+                    "This field is required",
+                    "This field is required",
+                    "Email is not valid",
+                  ]}
                   fullWidth
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
 
-                <TextField
+                <TextValidator
                   required
                   autoComplete="new-password"
                   margin="dense"
@@ -98,16 +107,28 @@ export default function Signup() {
                   label="Password"
                   type="password"
                   fullWidth
+                  validators={["required", "trim", "isPasswordMatch"]}
+                  errorMessages={[
+                    "This field is required",
+                    "This field is required",
+                    "Passwords don't match",
+                  ]}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-                <TextField
+                <TextValidator
                   required
                   autoComplete="new-password"
                   margin="dense"
                   id="passwordConfirm"
                   label="Password Confirmation"
                   type="password"
+                  validators={["required", "trim", "isPasswordMatchConfirm"]}
+                  errorMessages={[
+                    "This field is required",
+                    "This field is required",
+                    "Passwords don't match",
+                  ]}
                   fullWidth
                   value={passwordConfirm}
                   onChange={(e) => setPasswordConfirm(e.target.value)}
@@ -119,7 +140,7 @@ export default function Signup() {
                   </Button>
                 </Box>
               </CardContent>
-            </form>
+            </ValidatorForm>
           </Card>
           <Typography align="center" style={{ marginTop: "10px" }}>
             Already have an account? <Link to="/login">Log In</Link>

@@ -25,7 +25,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function Notification() {
+export default function Notifications() {
   const classes = useStyles();
   const [open, setOpen] = useState("");
   const [notification, setNotification] = useState(null);
@@ -35,23 +35,42 @@ export default function Notification() {
   }
 
   function closeDialog() {
-    setOpen("");
     setNotification(null);
+    setOpen("");
   }
 
-  return Notification.permission === "granted" ? (
+  if (!("Notification" in window))
+    return (
+      <div className={classes.customMarginTop}>
+        <Typography align="center">
+          This device does not support notification
+        </Typography>
+      </div>
+    );
+
+  if (Notification.permission !== "granted")
+    return (
+      <div className={classes.customMarginTop}>
+        <Typography align="center">
+          You need to enable the notifications for this feature
+        </Typography>
+      </div>
+    );
+
+  return (
     <>
       <div className={classes.customMarginTop}>
         <Typography>Notifications</Typography>
         <Divider />
         <NotificationList setOpen={setOpen} setNotification={setNotification} />
       </div>
-      <NotificationDialog
-        open={open}
-        onClose={closeDialog}
-        notification={notification}
-        type={"add"}
-      />
+      {open && (
+        <NotificationDialog
+          open={open}
+          onClose={closeDialog}
+          notification={notification}
+        />
+      )}
       <Fab
         className={classes.addNotificationButton}
         onClick={openAddNotification}
@@ -59,7 +78,5 @@ export default function Notification() {
         <AddAlertIcon />
       </Fab>
     </>
-  ) : (
-    <></>
   );
 }

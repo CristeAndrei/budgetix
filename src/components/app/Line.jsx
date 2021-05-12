@@ -13,10 +13,14 @@ import {
 import ReceiptIcon from "@material-ui/icons/Receipt";
 import ArrowBackIcon from "@material-ui/icons/ArrowBack";
 import DescriptionIcon from "@material-ui/icons/Description";
-import { database, firestore, storage } from "../../firebase";
+import { database, storage } from "../../firebase";
 import { useSelector } from "react-redux";
 import updateAllBalance from "../../helpers/updateAllBalance";
 import updateAllBudgetsBalance from "../../helpers/updateAllBudgetsBalance";
+import moment from "moment";
+import LoadingScreen from "../utils/LoadingScreen";
+import Message from "../utils/Message";
+import { TextValidator, ValidatorForm } from "react-material-ui-form-validator";
 
 export default function Line({ line }) {
   const [open, setOpen] = useState(false);
@@ -24,6 +28,8 @@ export default function Line({ line }) {
   const [name, setName] = useState("");
   const [value, setValue] = useState("");
   const { flux } = useSelector(({ fluxes }) => fluxes);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   function openDialog() {
     setOpen(true);
@@ -37,81 +43,71 @@ export default function Line({ line }) {
     setEdit(true);
   }
 
-  async function clickEditSave() {
+  async function updateLine() {
     setEdit(!edit);
     if (edit === false) {
-      const decimalValue = -line.value + parseFloat(value);
-      //Update line value
-      database.lines
-        .doc(line.id)
-        .update({
-          name: name,
+      closeDialog();
+      try {
+        const decimalValue = parseFloat(value) - line.value;
+        //Update line value
+        await database.lines.doc(line.id).update({
+          name: name.trim(),
           value: value,
-        })
-        .then()
-        .catch();
+        });
 
-      //Update flux balance
-      database.fluxes
-        .doc(line.fluxId)
-        .update({
-          balance: database.increment(decimalValue),
-        })
-        .then()
-        .catch();
+        //Update local and global balance
+        await updateAllBalance(flux, decimalValue);
 
-      //Update local and global balance
-      await updateAllBalance(flux, decimalValue);
-
-      //Update budget balance
-      if (flux.subscribedBudgets.length)
-        await updateAllBudgetsBalance(flux, decimalValue);
+        //Update budget balance
+        if (flux.subscribedBudgets.length)
+          await updateAllBudgetsBalance(flux, decimalValue);
+      } catch (err) {
+        setError("Failed to update the selected line");
+        console.log(err);
+      }
     }
   }
 
   async function deleteLine() {
     closeDialog();
+    try {
+      await database.lines.doc(line.id).delete();
 
-    //delete line
-    database.lines
-      .doc(line.id)
-      .delete()
-      .catch((error) => {
-        console.log(error);
-      });
+      await updateAllBalance(flux, -line.value);
 
-    //Update all balance values
+      //update budget balance
+      if (flux.subscribedBudgets.length)
+        await updateAllBudgetsBalance(flux, -value);
 
-    const balanceDiff = -line.value;
-    database.fluxes
-      .doc(line.fluxId)
-      .update({
-        balance: database.increment(balanceDiff),
-      })
-      .then()
-      .catch();
-
-    const batch = firestore.batch();
-
-    for (const el of flux.path) {
-      const docRef = await database.fluxes.doc(el.id);
-      batch.update(docRef, {
-        totalBalance: database.increment(balanceDiff),
-      });
-    }
-
-    //update budget balance
-    if (flux.subscribedBudgets.length)
-      await updateAllBudgetsBalance(flux, -value);
-
-    await batch.commit();
-
-    //Delete file if exists
-    if (line.url) {
-      const fileRef = storage.refFromURL(line.url);
-      fileRef.delete().then().catch();
+      //Delete file if exists
+      if (line.url) {
+        const fileRef = storage.refFromURL(line.url);
+        await fileRef.delete();
+      }
+    } catch (err) {
+      setError("Failed to delete selected line");
+      console.log(err);
     }
   }
+
+  async function handleLineSubmit(event) {
+    event.preventDefault();
+    setLoading(true);
+
+    switch (event.nativeEvent.submitter.name) {
+      case "deleteLine":
+        await deleteLine();
+        break;
+      case "editSave":
+        await updateLine();
+        break;
+      default:
+        break;
+    }
+
+    setLoading(false);
+  }
+
   return (
     <>
       <Box display="inline">
@@ -125,42 +121,66 @@ export default function Line({ line }) {
           <Button onClick={closeDialog} startIcon={<ArrowBackIcon />} />
           Line Info
         </DialogTitle>
-        <DialogContent>
-          <Typography>Date:{line.createdAt.toString()}</Typography>
-          {line.url && (
-            <Typography component={"span"} noWrap>
-              <a href={line.url} target="_blank" rel="noreferrer">
-                Open File
-              </a>
+        <ValidatorForm onSubmit={handleLineSubmit}>
+          <DialogContent>
+            <Typography>
+              Date:{moment(line.createdAt).format("MMM Do YYYY")}
             </Typography>
-          )}
-          <TextField
-            margin="dense"
-            id="name"
-            label="Name"
-            type="text"
-            fullWidth
-            value={name}
-            disabled={edit}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <TextField
-            margin="dense"
-            id="value"
-            label="Value"
-            type="number"
-            fullWidth
-            value={value}
-            disabled={edit}
-            onChange={(e) => setValue(e.target.value)}
-          />
+            {line.url && (
+              <Typography component={"span"} noWrap>
+                <a href={line.url} target="_blank" rel="noreferrer">
+                  Open File
+                </a>
+              </Typography>
+            )}
+            <TextValidator
+              margin="dense"
+              id="name"
+              label="Name"
+              type="text"
+              fullWidth
+              validators={["required", "trim"]}
+              errorMessages={[
+                "This field is required",
+                "This field is required",
+              ]}
+              value={name}
+              disabled={edit}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <TextField
+              required
+              margin="dense"
+              id="value"
+              label="Value"
+              type="number"
+              fullWidth
+              value={value}
+              disabled={edit}
+              onChange={(e) => setValue(e.target.value)}
+            />
 
-          <DialogActions>
-            <Button onClick={clickEditSave}>{edit ? "Edit" : "Save"}</Button>
-            <Button onClick={deleteLine}>Delete</Button>
-          </DialogActions>
-        </DialogContent>
+            <DialogActions>
+              <Button type="submit" name="editSave">
+                {edit ? "Edit" : "Save"}
+              </Button>
+              <Button type="submit" name="deleteLine">
+                Delete
+              </Button>
+            </DialogActions>
+          </DialogContent>
+        </ValidatorForm>
       </Dialog>
+      {error && (
+        <Message
+          type="error"
+          text={error}
+          onCloseCo={() => setError("")}
+          vertical="top"
+          horizontal="center"
+        />
+      )}
+      {loading && <LoadingScreen open={loading} />}
     </>
   );
 }

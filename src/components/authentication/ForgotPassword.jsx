@@ -1,18 +1,12 @@
 import React, { useEffect, useState } from "react";
-import {
-  Card,
-  CardContent,
-  TextField,
-  Button,
-  Typography,
-  Box,
-} from "@material-ui/core";
+import { Box, Button, Card, CardContent, Typography } from "@material-ui/core";
 
 import { Link, useHistory } from "react-router-dom";
 import CenteredContainer from "../utils/CenteredContainer";
 import Message from "../utils/Message";
 import { resetPassword, setForgotPasswordError } from "../../redux/userSlice";
 import { useDispatch, useSelector } from "react-redux";
+import { TextValidator, ValidatorForm } from "react-material-ui-form-validator";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -37,14 +31,14 @@ export default function ForgotPassword() {
     <>
       <CenteredContainer>
         <Card>
-          <form onSubmit={handleSubmit}>
+          <ValidatorForm onSubmit={handleSubmit}>
             <CardContent>
               <Typography noWrap variant="h6">
                 Password Reset
               </Typography>
               <></>
 
-              <TextField
+              <TextValidator
                 autoFocus
                 required
                 autoComplete="username"
@@ -52,6 +46,12 @@ export default function ForgotPassword() {
                 id="email"
                 label="Email"
                 type="email"
+                validators={["required", "isEmail", "trim"]}
+                errorMessages={[
+                  "This field is required",
+                  "Email is not valid",
+                  "This field is required",
+                ]}
                 fullWidth
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -63,7 +63,7 @@ export default function ForgotPassword() {
                 </Button>
               </Box>
             </CardContent>
-          </form>
+          </ValidatorForm>
         </Card>{" "}
         <Typography align="center" gutterBottom>
           <Link to="/login">Login</Link>
@@ -81,7 +81,15 @@ export default function ForgotPassword() {
           onCloseCo={() => dispatch(setForgotPasswordError({ text: false }))}
         />
       )}
-      <Message open={resettingPassword} />
+      {resettingPassword && (
+        <Message
+          text="An email with instructions was sent to the specified email with instructions for resetting the password"
+          type="success"
+          vertical="top"
+          horizontal="center"
+          open={resettingPassword}
+        />
+      )}
     </>
   );
 }

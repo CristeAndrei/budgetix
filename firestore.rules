@@ -26,12 +26,12 @@ service cloud.firestore {
       allow update: if (authed() && matchesUser(resource.data) );
       allow delete: if (authed() && matchesUser(resource.data));
     }
-    
+
     match /budgets/{budgetsId} {
-     function matchesUserBudgets(data){
-      return request.auth.token.name in data.userList;
-    }
-    
+      function matchesUserBudgets(data){
+        return request.auth.uid in data.userList;
+      }
+
       allow read: if (authed());
       allow create: if(authed() && matchesUserBudgets(request.resource.data));
       allow update: if (authed() && matchesUserBudgets(resource.data) );
@@ -39,13 +39,24 @@ service cloud.firestore {
     }
 
     match /tasks/{taskId} {
-     function matchesUserTasks(data){
-      return request.auth.token.name in data.options.userList;
-    }
-       allow read: if (authed());
+      function matchesUserTasks(data){
+        return request.auth.uid in data.options.userList;
+      }
+      allow read: if (authed());
       allow create: if(authed() && matchesUserTasks(request.resource.data));
       allow update: if (authed() && matchesUserTasks(resource.data) );
       allow delete: if (authed() && matchesUserTasks(resource.data));
+    }
+
+
+    match /graphs/{graphs} {
+      function matchesUserGraps(data){
+        return request.auth.uid == data.userId;
+      }
+      allow read: if (authed());
+      allow create: if(authed() && matchesUserGraps(request.resource.data));
+      allow update: if (authed() && matchesUserGraps(resource.data) );
+      allow delete: if (authed() && matchesUserGraps(resource.data));
     }
 
     match /users/{userId} {

@@ -13,10 +13,13 @@ import { auth, messaging } from "../firebase";
 import { setDeviceFCMToken, setUser } from "../redux/userSlice";
 import { useDispatch, useSelector } from "react-redux";
 import LoadingScreen from "./utils/LoadingScreen";
-import Notification from "./app/notification/Notification";
+import Notifications from "./app/notifications/Notifications";
 import getMessagingToken from "../helpers/getMessagingToken";
 import { getNotificationPermission } from "../helpers/getNotificationPermission";
-import Budget from "./app/budget/Budget";
+import Budgets from "./app/budgets/Budgets";
+import BudgetInfo from "./app/budgets/BudgetInfo";
+import Graphs from "./app/graphs/Graphs";
+import GraphInfo from "./app/graphs/GraphInfo";
 
 export default function App() {
   const dispatch = useDispatch();
@@ -26,7 +29,7 @@ export default function App() {
   const [canLogin, setCanLogin] = useState(false);
 
   useEffect(() => {
-    getNotificationPermission();
+    (async () => await getNotificationPermission())();
     if (Notification.permission === "granted") {
       return messaging.onMessage((payload) => {
         console.log("Message received. ", payload);
@@ -43,26 +46,24 @@ export default function App() {
   useEffect(() => {
     if (!isLoggingIn && !isSigningUp) {
       const unAuthStateChange = auth.onAuthStateChanged((user) => {
-        if (user) {
-          dispatch(
-            setUser({
-              uid: user.uid,
-              email: user.email,
-              userName: user.displayName,
-              accountType: user.providerData[0].providerId,
-            })
-          );
-          if (Notification.permission === "granted") {
-            const getToken = async () => {
+        (async () => {
+          if (user) {
+            dispatch(
+              setUser({
+                uid: user.uid,
+                email: user.email,
+                userName: user.displayName,
+                accountType: user.providerData[0].providerId,
+              })
+            );
+            if (Notification.permission === "granted") {
               const token = await getMessagingToken(user.uid);
               dispatch(setDeviceFCMToken({ token }));
-            };
-
-            getToken();
+            }
+          } else {
+            setCanLogin(true);
           }
-        } else {
-          setCanLogin(true);
-        }
+        })();
       });
 
       return () => {
@@ -104,11 +105,23 @@ export default function App() {
               <PrivateRoute path="/user" component={Profile} />
 
               {/* Notifications */}
-              <PrivateRoute path="/notifications" component={Notification} />
+              <PrivateRoute path="/notifications" component={Notifications} />
 
               {/* Budget */}
-              <PrivateRoute exact path="/budget" component={Budget} />
-              <PrivateRoute exact path="/budget/:budgetId" component={Budget} />
+              <PrivateRoute exact path="/budget" component={Budgets} />
+              <PrivateRoute
+                exact
+                path="/budget/:budgetId"
+                component={BudgetInfo}
+              />
+
+              {/* Graphs */}
+              <PrivateRoute exact path="/graphs" component={Graphs} />
+              <PrivateRoute
+                exact
+                path="/graphs/:graphId"
+                component={GraphInfo}
+              />
 
               {/* Auth */}
               <Route path="/signup" component={Signup} />

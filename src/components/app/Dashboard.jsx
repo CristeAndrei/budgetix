@@ -7,6 +7,8 @@ import Line from "./Line";
 import { useFlux } from "../../hooks/useFlux";
 import FluxesAccordion from "./fluxNavigation/FluxesAccordion";
 import BottomActions from "./bottomActions/BottomActions";
+import LoadingScreen from "../utils/LoadingScreen";
+import Message from "../utils/Message";
 
 const useStyles = makeStyles((theme) => {
   return {
@@ -28,7 +30,13 @@ const useStyles = makeStyles((theme) => {
 export default function Dashboard({ type }) {
   const classes = useStyles();
   const { fluxId = null } = useParams();
-  const { childFluxes, childLines } = useFlux(fluxId, type);
+  const {
+    childFluxes,
+    childLines,
+    errorFlux,
+    loadingFlux,
+    setErrorFlux,
+  } = useFlux(fluxId, type);
   const endLines = useRef(null);
 
   useEffect(() => {
@@ -64,6 +72,16 @@ export default function Dashboard({ type }) {
         </>
       )}
       <BottomActions type={type} />
+      {errorFlux && (
+        <Message
+          type="error"
+          text={errorFlux}
+          onCloseCo={() => setErrorFlux("")}
+          vertical="top"
+          horizontal="center"
+        />
+      )}
+      {loadingFlux && <LoadingScreen open={loadingFlux} />}
     </div>
   );
 }

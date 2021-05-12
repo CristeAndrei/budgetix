@@ -1,27 +1,27 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  Box,
+  Button,
   Card,
   CardContent,
-  TextField,
-  Button,
-  Typography,
-  Box,
   IconButton,
+  Typography,
 } from "@material-ui/core";
 import { Link, useHistory } from "react-router-dom";
 import CenteredContainer from "../utils/CenteredContainer";
 import { FcGoogle } from "react-icons/fc";
 import { googleAuthProvider } from "../../firebase";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   loginEmail,
   loginGoogle,
   setLoginError,
   setResetPasswordRedirect,
 } from "../../redux/userSlice";
-import { useSelector } from "react-redux";
 import Message from "../utils/Message";
 import LoadingScreen from "../utils/LoadingScreen";
+import { TextValidator, ValidatorForm } from "react-material-ui-form-validator";
+import useValidators from "../../hooks/useValidators";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -35,6 +35,8 @@ export default function Login() {
     loginError,
     resetPasswordRedirect,
   } = useSelector(({ user }) => user);
+
+  useValidators();
 
   useEffect(() => {
     if (isAuthenticated === true) history.push("/");
@@ -54,14 +56,14 @@ export default function Login() {
   return (
     <>
       <CenteredContainer>
-        <Card>
-          <form onSubmit={handleSubmitLoginEmail}>
+        <Card style={{ width: "20rem" }}>
+          <ValidatorForm onSubmit={handleSubmitLoginEmail}>
             <CardContent>
               <Typography align="center" gutterBottom>
                 MoneyRoller
               </Typography>
 
-              <TextField
+              <TextValidator
                 required
                 autoFocus
                 autoComplete="username"
@@ -70,18 +72,30 @@ export default function Login() {
                 label="Email"
                 type="email"
                 placeholder="Email"
+                validators={["required", "isEmail", "trim"]}
+                errorMessages={[
+                  "This field is required",
+                  "Email is not valid",
+                  "This field is required",
+                ]}
                 fullWidth
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
 
-              <TextField
+              <TextValidator
                 required
                 autoComplete="current-password"
                 margin="dense"
                 id="password"
                 label="Password"
                 type="password"
+                validators={["required", "trim", "noSpace"]}
+                errorMessages={[
+                  "This field is required",
+                  "This field is required",
+                  "Your password contains white spaces",
+                ]}
                 fullWidth
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -92,7 +106,7 @@ export default function Login() {
                 </Button>
               </Box>
             </CardContent>
-          </form>
+          </ValidatorForm>
         </Card>
         <Box align="center">
           <Typography>
