@@ -48,29 +48,25 @@ export default function LineGraph({ graph }) {
             switch (graph.timeFormat) {
               case "days":
                 return (prevCreatedAt, createdAt) => {
-                  if (
+                  return (
                     prevCreatedAt.getDate() === createdAt.getDate() &&
                     prevCreatedAt.getMonth() === createdAt.getMonth() &&
                     prevCreatedAt.getFullYear() === createdAt.getFullYear()
-                  )
-                    return true;
-                  return false;
+                  );
                 };
               case "months":
                 return (prevCreatedAt, createdAt) => {
-                  if (
+                  return (
                     prevCreatedAt.getMonth() === createdAt.getMonth() &&
                     prevCreatedAt.getFullYear() === createdAt.getFullYear()
-                  )
-                    return true;
-                  return false;
+                  );
                 };
 
               case "years":
                 return (prevCreatedAt, createdAt) => {
-                  if (prevCreatedAt.getFullYear() === createdAt.getFullYear())
-                    return true;
-                  return false;
+                  return (
+                    prevCreatedAt.getFullYear() === createdAt.getFullYear()
+                  );
                 };
               default:
                 break;

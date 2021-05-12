@@ -31,10 +31,9 @@ export function useNotifications() {
           "Something went wrong while getting the notifications"
         );
         console.log(err);
-      } finally {
-        setLoadingNotifications(false);
-        return unsubscribeNotifications;
       }
+      setLoadingNotifications(false);
+      return unsubscribeNotifications;
     }
   }, [uid, dispatch]);
 

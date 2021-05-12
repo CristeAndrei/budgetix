@@ -14,19 +14,13 @@ export default function useValidators(password = null, passwordConfirm = null) {
 
     if (!ValidatorForm.hasValidationRule("isPasswordMatch")) {
       ValidatorForm.addValidationRule("isPasswordMatch", (value) => {
-        if (value !== passwordConfirm) {
-          return false;
-        }
-        return true;
+        return value === passwordConfirm;
       });
     }
 
     if (!ValidatorForm.hasValidationRule("isPasswordMatchConfirm")) {
       ValidatorForm.addValidationRule("isPasswordMatchConfirm", (value) => {
-        if (value !== password) {
-          return false;
-        }
-        return true;
+        return value === password;
       });
     }
 

@@ -147,7 +147,7 @@ export default function Profile() {
         />
       )}
       <CenteredContainer>
-        <Card>
+        <Card style={{ width: "20rem" }}>
           <CardContent>
             <Typography align="center">Profile</Typography>
 

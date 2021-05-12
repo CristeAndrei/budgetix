@@ -54,13 +54,12 @@ export function useBudget(budgetId = null) {
       } catch (err) {
         setErrorBudget("Something went wrong while getting the budgets");
         console.log(err);
-      } finally {
-        setLoadingBudget(false);
-        return () => {
-          unsubscribeBudget();
-          unsubscribeAllBudgets();
-        };
       }
+      setLoadingBudget(false);
+      return () => {
+        unsubscribeBudget();
+        unsubscribeAllBudgets();
+      };
     }
   }, [uid, dispatch, budgetId]);
 

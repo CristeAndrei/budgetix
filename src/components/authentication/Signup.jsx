@@ -53,7 +53,7 @@ export default function Signup() {
         <></>
       ) : (
         <CenteredContainer>
-          <Card>
+          <Card style={{ width: "20rem" }}>
             <ValidatorForm onSubmit={handleSubmit}>
               <CardContent>
                 <Box mb={4}>
@@ -107,11 +107,10 @@ export default function Signup() {
                   label="Password"
                   type="password"
                   fullWidth
-                  validators={["required", "trim", "isPasswordMatch"]}
+                  validators={["required", "trim"]}
                   errorMessages={[
                     "This field is required",
                     "This field is required",
-                    "Passwords don't match",
                   ]}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

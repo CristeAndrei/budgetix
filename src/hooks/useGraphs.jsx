@@ -53,13 +53,12 @@ export function useGraphs(graphId = null) {
       } catch (err) {
         setErrorGraph("Something went wrong while getting the graphs");
         console.log(err);
-      } finally {
-        setLoadingGraph(false);
-        return () => {
-          unsubscribeGraph();
-          unsubscribeAllGraphs();
-        };
       }
+      setLoadingGraph(false);
+      return () => {
+        unsubscribeGraph();
+        unsubscribeAllGraphs();
+      };
     }
   }, [uid, dispatch, graphId]);
 

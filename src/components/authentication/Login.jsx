@@ -60,7 +60,7 @@ export default function Login() {
           <ValidatorForm onSubmit={handleSubmitLoginEmail}>
             <CardContent>
               <Typography align="center" gutterBottom>
-                MoneyRoller
+                Budgetix
               </Typography>
 
               <TextValidator

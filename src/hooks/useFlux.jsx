@@ -66,14 +66,13 @@ export function useFlux(fluxId = null, type = null) {
       } catch (err) {
         setErrorFlux("Something went wrong while getting the fluxes");
         console.log(err);
-      } finally {
-        setLoadingFlux(false);
-        return () => {
-          unsubscribeFlux();
-          unsubscribeFluxes();
-          unsubscribeLines();
-        };
       }
+      setLoadingFlux(false);
+      return () => {
+        unsubscribeFlux();
+        unsubscribeFluxes();
+        unsubscribeLines();
+      };
     }
   }, [fluxId, uid, type, dispatch]);
 
