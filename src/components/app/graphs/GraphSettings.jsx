@@ -43,6 +43,7 @@ export default function GraphSettings({ graph }) {
       selectedToDate.valueOf() <= selectedFromDate.valueOf()
     ) {
       setError("Start or end date are not correct");
+      setLoading(false);
       return;
     }
 
