@@ -1,9 +1,7 @@
 ## Techologies and libraries used
  
 - React 
-- Create-React-App 
 - Material UI 
-- Redux 
 - Redux Toolkit 
 - React Router DOM 
 - Firebase Authentification 
